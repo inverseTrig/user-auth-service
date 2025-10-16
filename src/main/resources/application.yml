@@ -1,0 +1,9 @@
+server:
+  servlet:
+    context-path: /api
+  shutdown: graceful
+  port: 8080
+
+spring:
+  application:
+    name: user-auth-service
