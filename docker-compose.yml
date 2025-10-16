@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  user-auth-service:
+    build: .
+    ports:
+      - "8000:8080"
+    networks:
+      - user-auth-network
+    restart: unless-stopped
+
+networks:
+  user-auth-network:
+    driver: bridge
