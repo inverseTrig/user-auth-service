@@ -9,6 +9,17 @@ services:
       - user-auth-network
     restart: unless-stopped
 
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: db_user
+      POSTGRES_PASSWORD: password
+      LANG: C.utf8
+      LC_ALL: C.utf8
+    ports:
+      - "5433:5432"
+
 networks:
   user-auth-network:
     driver: bridge
