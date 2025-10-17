@@ -28,3 +28,20 @@ spring:
 
 snowflake:
   worker-id: 1
+
+cors:
+  allowed-origins:
+    - http://localhost:8080
+  allowed-origin-patterns:
+    - http://localhost:*
+  allowed-methods:
+    - GET
+    - POST
+    - PUT
+    - DELETE
+    - PATCH
+    - OPTIONS
+  allowed-headers:
+    - "*"
+  allow-credentials: true
+  max-age: 3600
