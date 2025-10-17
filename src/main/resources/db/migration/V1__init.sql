@@ -7,7 +7,7 @@ CREATE TABLE users
     role       VARCHAR(100) NOT NULL,
     created_at TIMESTAMP    NOT NULL,
     updated_at TIMESTAMP    NOT NULL,
-    deleted_at TIMESTAMP NULL,
+    deleted_at TIMESTAMP    NULL,
 
     CONSTRAINT users_email_key UNIQUE (email)
 );
@@ -21,3 +21,17 @@ COMMENT ON COLUMN users.role IS '권한';
 COMMENT ON COLUMN users.created_at IS '생성일시';
 COMMENT ON COLUMN users.updated_at IS '수정일시';
 COMMENT ON COLUMN users.deleted_at IS '삭제일시';
+
+CREATE INDEX idx_users_email ON users (email);
+
+-- INITIAL ADMIN USER
+-- Password: secure_password
+INSERT INTO users
+VALUES (731276600279109,
+        'admin@example.com',
+        '$2a$10$zG1xeffcDTrQ3Hdh9jEKAupm6rMjsSRwYK6cNsV/yslcE2Wd3wVea',
+        'Admin',
+        'ADMIN',
+        now(),
+        now(),
+        null);

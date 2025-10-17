@@ -13,6 +13,7 @@ plugins {
 group = "com.example"
 version = "0.0.1-SNAPSHOT"
 description = "user-auth-service"
+val basePackage: String by project
 
 java {
     toolchain {
@@ -25,12 +26,20 @@ repositories {
 }
 
 val hibernateUtilsVersion = "3.11.0"
+
+val kotestVersion = "6.0.4"
+val mockkVersion = "1.14.6"
+val testContainersPostgresVersion = "1.21.3"
+val fixtureVersion = "1.2.0"
+val javaFakerVersion = "1.0.2"
+
 dependencies {
     // Spring
     implementation("org.springframework.boot:spring-boot-starter")
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-security")
+    implementation("org.springframework.boot:spring-boot-starter-validation")
 
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
@@ -48,9 +57,35 @@ dependencies {
 
     runtimeOnly("org.postgresql:postgresql")
 
+    // Spring
+    testImplementation("org.springframework.boot:spring-boot-starter-test") {
+        exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
+        exclude(module = "mockito-core")
+        exclude(group = "com.vaadin.external.google", module = "android-json")
+    }
+    testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
+    // Kotest
+    testImplementation("io.kotest:kotest-runner-junit5:$kotestVersion")
+    testImplementation("io.kotest:kotest-extensions-spring:$kotestVersion")
+    testImplementation("io.kotest:kotest-property:$kotestVersion")
+    testImplementation("io.kotest:kotest-extensions-now:$kotestVersion")
+
+    // Mockk
+    testImplementation("io.mockk:mockk:$mockkVersion")
+
+    // TestContainers
+    testImplementation("org.springframework.boot:spring-boot-testcontainers")
+    testImplementation("org.testcontainers:postgresql:$testContainersPostgresVersion")
+
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
+    // TestContainers
+    testImplementation("org.springframework.boot:spring-boot-testcontainers")
+    testImplementation("org.testcontainers:postgresql:$testContainersPostgresVersion")
 }
 
 kotlin {
@@ -61,6 +96,7 @@ kotlin {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+    systemProperty("kotest.framework.config.fqn", "$basePackage.KotestConfiguration")
 }
 
 ktlint {
