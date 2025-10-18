@@ -38,6 +38,21 @@ class UserService(
         return user
     }
 
+    @Transactional
+    fun update(data: UpdateUserServiceData): User {
+        val user = getById(data.id)
+
+        data.email?.let { newEmail ->
+            if (newEmail != user.email && userRepository.existsByEmailAndIdNot(newEmail, data.id)) {
+                throw IllegalArgumentException(ErrorMessage.INVALID.EMAIL_ALREADY_EXISTS.message)
+            }
+        }
+
+        user.update(data.toData())
+
+        return user
+    }
+
     fun getById(id: Long): User {
         return userRepository.findById(id)
             .orElseThrow {
@@ -58,5 +73,17 @@ data class CreateUserData(
             email = this.email,
             password = encryptedPassword,
             role = this.role,
+        )
+}
+
+data class UpdateUserServiceData(
+    val id: Long,
+    val name: String?,
+    val email: String?,
+) {
+    fun toData(): UpdateUserData =
+        UpdateUserData(
+            name = this.name,
+            email = this.email,
         )
 }

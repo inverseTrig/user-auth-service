@@ -3,6 +3,7 @@ package com.example.userauthservice.application.facade
 import com.example.userauthservice.UnitTestBase
 import com.example.userauthservice.domain.user.CreateUserData
 import com.example.userauthservice.domain.user.Role
+import com.example.userauthservice.domain.user.UpdateUserServiceData
 import com.example.userauthservice.domain.user.User
 import com.example.userauthservice.domain.user.UserService
 import com.example.userauthservice.generateEmail
@@ -78,6 +79,44 @@ class UserFacadeTest : UnitTestBase() {
 
                 // Then
                 actual shouldBe user
+            }
+        }
+
+        context("updateUser") {
+            test("사용자 정보를 업데이트한다") {
+                // Given
+                val user =
+                    User(
+                        name = "updatedName",
+                        email = "updated@example.com",
+                        password = generateString(),
+                        role = Role.MEMBER,
+                    )
+
+                val data =
+                    UpdateUserServiceData(
+                        id = user.id,
+                        name = "updatedName",
+                        email = "updated@example.com",
+                    )
+
+                every { userService.update(any()) } returns user
+
+                // When
+                val actual = userFacade.updateUser(data)
+
+                // Then
+                actual shouldBe user
+
+                verify {
+                    val matcher =
+                        withArg<UpdateUserServiceData> {
+                            it.id shouldBe user.id
+                            it.name shouldBe "updatedName"
+                            it.email shouldBe "updated@example.com"
+                        }
+                    userService.update(matcher)
+                }
             }
         }
     }

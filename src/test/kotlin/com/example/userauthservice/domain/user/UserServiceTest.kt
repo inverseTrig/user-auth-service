@@ -3,6 +3,7 @@ package com.example.userauthservice.domain.user
 import com.example.userauthservice.ErrorMessage
 import com.example.userauthservice.InvalidCredentialsException
 import com.example.userauthservice.UnitTestBase
+import com.example.userauthservice.generateString
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.mockk.every
@@ -174,6 +175,141 @@ class UserServiceTest : UnitTestBase() {
                         userService.getById(userId)
                     }
                 exception.message shouldBe ErrorMessage.NOT_FOUND.USER.message
+            }
+        }
+
+        context("update") {
+            test("사용자 정보를 업데이트한다.") {
+                // Given
+                val user =
+                    User(
+                        name = "originalName",
+                        email = "original@email.com",
+                        password = generateString(),
+                        role = Role.MEMBER,
+                    )
+
+                val updateData =
+                    UpdateUserServiceData(
+                        id = user.id,
+                        name = "updatedName",
+                        email = "updated@email.com",
+                    )
+
+                every { userRepository.findById(user.id) } returns Optional.of(user)
+                every { userRepository.existsByEmailAndIdNot("updated@email.com", user.id) } returns false
+
+                // When
+                val result = userService.update(updateData)
+
+                // Then
+                result shouldBe user
+                result.name shouldBe "updatedName"
+                result.email shouldBe "updated@email.com"
+            }
+
+            test("존재하지 않는 사용자를 업데이트하면 오류를 던진다.") {
+                // Given
+                val userId = 999L
+                val updateData =
+                    UpdateUserServiceData(
+                        id = userId,
+                        name = generateString(),
+                        email = generateString(),
+                    )
+
+                every { userRepository.findById(userId) } returns Optional.empty()
+
+                // Expect
+                val exception =
+                    shouldThrow<NoSuchElementException> {
+                        userService.update(updateData)
+                    }
+                exception.message shouldBe ErrorMessage.NOT_FOUND.USER.message
+            }
+
+            test("유효하지 않은 이메일 형식으로 업데이트하면 오류를 던진다.") {
+                // Given
+                val user =
+                    User(
+                        name = "originalName",
+                        email = "original@email.com",
+                        password = generateString(),
+                        role = Role.MEMBER,
+                    )
+
+                val updateData =
+                    UpdateUserServiceData(
+                        id = user.id,
+                        name = "updatedName",
+                        email = "invalid_email",
+                    )
+
+                every { userRepository.findById(user.id) } returns Optional.of(user)
+                every { userRepository.existsByEmailAndIdNot("invalid_email", user.id) } returns false
+
+                // Expect
+                val exception =
+                    shouldThrow<IllegalArgumentException> {
+                        userService.update(updateData)
+                    }
+                exception.message shouldBe ErrorMessage.INVALID.INVALID_EMAIL_FORMAT.message
+            }
+
+            test("이미 사용 중인 이메일로 업데이트하면 오류를 던진다.") {
+                // Given
+                val user =
+                    User(
+                        name = "originalName",
+                        email = "original@email.com",
+                        password = generateString(),
+                        role = Role.MEMBER,
+                    )
+
+                val updateData =
+                    UpdateUserServiceData(
+                        id = user.id,
+                        name = "updatedName",
+                        email = "existing@email.com",
+                    )
+
+                every { userRepository.findById(user.id) } returns Optional.of(user)
+                every { userRepository.existsByEmailAndIdNot("existing@email.com", user.id) } returns true
+
+                // Expect
+                val exception =
+                    shouldThrow<IllegalArgumentException> {
+                        userService.update(updateData)
+                    }
+                exception.message shouldBe ErrorMessage.INVALID.EMAIL_ALREADY_EXISTS.message
+            }
+
+            test("자신의 현재 이메일로 업데이트하면 성공한다.") {
+                // Given
+                val user =
+                    User(
+                        name = "originalName",
+                        email = "same@email.com",
+                        password = generateString(),
+                        role = Role.MEMBER,
+                    )
+
+                val updateData =
+                    UpdateUserServiceData(
+                        id = user.id,
+                        name = "updatedName",
+                        email = "same@email.com",
+                    )
+
+                every { userRepository.findById(user.id) } returns Optional.of(user)
+
+                // When
+                val result = userService.update(updateData)
+
+                // Then
+                result shouldBe user
+                result.name shouldBe "updatedName"
+                result.email shouldBe "same@email.com"
             }
         }
     }
