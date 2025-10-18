@@ -7,7 +7,6 @@ import com.example.userauthservice.domain.refreshToken.RefreshToken
 import com.example.userauthservice.domain.refreshToken.RefreshTokenRepository
 import com.example.userauthservice.domain.user.CreateUserData
 import com.example.userauthservice.domain.user.User
-import com.example.userauthservice.domain.user.UserRepository
 import org.springframework.boot.test.context.TestComponent
 import org.springframework.context.ApplicationContext
 import org.springframework.security.crypto.password.PasswordEncoder
@@ -18,8 +17,8 @@ class TestHelper(
     private val context: ApplicationContext,
 ) {
     fun getUser(id: Long): User {
-        val repository = UserRepository::class.getBean()
-        return repository.findById(id).orElseThrow()
+        val facade = UserFacade::class.getBean()
+        return facade.getUserById(id)
     }
 
     fun passwordMatches(

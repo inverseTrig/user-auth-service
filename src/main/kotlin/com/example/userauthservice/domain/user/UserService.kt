@@ -68,6 +68,12 @@ class UserService(
     ): Page<User> {
         return userRepository.findAll(filter, pageable)
     }
+
+    @Transactional
+    fun deleteById(id: Long) {
+        val user = getById(id)
+        userRepository.delete(user)
+    }
 }
 
 data class CreateUserData(

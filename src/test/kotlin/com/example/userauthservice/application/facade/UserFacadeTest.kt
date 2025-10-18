@@ -156,5 +156,18 @@ class UserFacadeTest : UnitTestBase() {
                 verify { userService.getUsersByPage(filter, pageable) }
             }
         }
+
+        context("deleteUser") {
+            test("사용자 ID로 사용자를 삭제한다") {
+                // Given
+                val userId = 123L
+
+                // When
+                userFacade.deleteUser(userId)
+
+                // Then
+                verify { userService.deleteById(userId) }
+            }
+        }
     }
 }

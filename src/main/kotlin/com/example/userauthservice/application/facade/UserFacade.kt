@@ -31,4 +31,8 @@ class UserFacade(
     ): Page<User> {
         return userService.getUsersByPage(filter, pageable)
     }
+
+    fun deleteUser(id: Long) {
+        userService.deleteById(id)
+    }
 }

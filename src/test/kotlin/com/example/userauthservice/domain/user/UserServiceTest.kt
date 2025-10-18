@@ -348,5 +348,26 @@ class UserServiceTest : UnitTestBase() {
                 verify { userRepository.findAll(filter, pageable) }
             }
         }
+
+        context("deleteById") {
+            test("ID로 사용자를 삭제한다.") {
+                // Given
+                val user =
+                    User(
+                        name = "UserToDelete",
+                        email = "delete@example.com",
+                        password = generateString(),
+                        role = Role.MEMBER,
+                    )
+
+                every { userRepository.findById(user.id) } returns Optional.of(user)
+
+                // When
+                userService.deleteById(user.id)
+
+                // Then
+                verify { userRepository.delete(user) }
+            }
+        }
     }
 }

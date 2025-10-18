@@ -73,3 +73,22 @@ annotation class PutUser
 @Parameter(name = "sort", description = "정렬 기준 (예: name,asc 또는 email,desc)", required = false)
 @SecuredEndpoint
 annotation class GetUsers
+
+@Target(AnnotationTarget.FUNCTION)
+@Retention(AnnotationRetention.RUNTIME)
+@Operation(
+    summary = "사용자 삭제",
+    description = "사용자 ID로 사용자를 삭제합니다. 인증이 필요하며, ADMIN 권한이거나 본인만 삭제할 수 있습니다.",
+)
+@ApiResponse(
+    responseCode = "204",
+    description = "사용자 삭제 성공",
+)
+@ApiResponse(
+    responseCode = "404",
+    description = "사용자를 찾을 수 없음",
+    content = [Content(schema = Schema(implementation = ErrorResponse::class))],
+)
+@Parameter(name = "id", description = "삭제할 사용자의 ID", required = true)
+@SecuredEndpoint
+annotation class DeleteUser

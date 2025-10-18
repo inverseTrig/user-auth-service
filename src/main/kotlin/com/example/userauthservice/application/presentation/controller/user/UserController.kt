@@ -2,6 +2,7 @@ package com.example.userauthservice.application.presentation.controller.user
 
 import com.example.userauthservice.application.facade.UserFacade
 import com.example.userauthservice.application.presentation.PageResponse
+import com.example.userauthservice.application.presentation.controller.docs.DeleteUser
 import com.example.userauthservice.application.presentation.controller.docs.GetUserById
 import com.example.userauthservice.application.presentation.controller.docs.GetUsers
 import com.example.userauthservice.application.presentation.controller.docs.PutUser
@@ -15,6 +16,7 @@ import org.springframework.data.domain.Sort
 import org.springframework.data.web.PageableDefault
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
+import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PutMapping
@@ -67,5 +69,15 @@ class UserController(
     ): ResponseEntity<UserResponse> {
         val user = userFacade.updateUser(request.toData(id))
         return ResponseEntity.ok(UserResponse(user))
+    }
+
+    @DeleteUser
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN') or (hasRole('MEMBER') and #id == authentication.principal.userId)")
+    fun deleteUser(
+        @PathVariable id: Long,
+    ): ResponseEntity<Void> {
+        userFacade.deleteUser(id)
+        return ResponseEntity.noContent().build()
     }
 }
