@@ -9,6 +9,7 @@ import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.PageRequest
 import org.springframework.security.crypto.password.PasswordEncoder
@@ -17,11 +18,13 @@ import java.util.Optional
 class UserServiceTest : UnitTestBase() {
     private val userRepository: UserRepository = mockk()
     private val passwordEncoder: PasswordEncoder = mockk()
+    private val eventPublisher: ApplicationEventPublisher = mockk()
 
     private val userService: UserService =
         UserService(
             userRepository = userRepository,
             passwordEncoder = passwordEncoder,
+            eventPublisher = eventPublisher,
         )
 
     init {
