@@ -3,6 +3,8 @@ package com.example.userauthservice.domain.user
 import com.example.userauthservice.ErrorMessage
 import com.example.userauthservice.InvalidCredentialsException
 import jakarta.transaction.Transactional
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 
@@ -58,6 +60,13 @@ class UserService(
             .orElseThrow {
                 NoSuchElementException(ErrorMessage.NOT_FOUND.USER.message)
             }
+    }
+
+    fun getUsersByPage(
+        filter: UserFilter,
+        pageable: Pageable,
+    ): Page<User> {
+        return userRepository.findAll(filter, pageable)
     }
 }
 

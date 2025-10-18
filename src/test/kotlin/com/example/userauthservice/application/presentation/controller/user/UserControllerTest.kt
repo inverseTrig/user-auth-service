@@ -2,15 +2,211 @@ package com.example.userauthservice.application.presentation.controller.user
 
 import com.example.userauthservice.FunctionalTestBase
 import com.example.userauthservice.application.presentation.ErrorResponse
+import com.example.userauthservice.application.presentation.PageResponse
 import com.example.userauthservice.application.presentation.dto.UpdateUserRequest
 import com.example.userauthservice.application.presentation.dto.UserResponse
 import com.example.userauthservice.domain.user.Role
+import com.example.userauthservice.typeRef
 import io.kotest.assertions.assertSoftly
+import io.kotest.matchers.collections.shouldContainAll
+import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
+import io.kotest.matchers.collections.shouldNotContain
+import io.kotest.matchers.longs.shouldBeGreaterThanOrEqual
 import io.kotest.matchers.shouldBe
 import org.springframework.http.HttpStatus
 
 class UserControllerTest : FunctionalTestBase() {
     init {
+        context("getUsers") {
+            test("ADMIN 권한으로 사용자 목록을 조회할 수 있다.") {
+                // Given
+                val adminUser = testHelper.createUser(role = Role.ADMIN)
+                val alice =
+                    testHelper.createUser(
+                        name = "Alice",
+                        email = "alice@example.com",
+                        role = Role.MEMBER,
+                    )
+                val bob =
+                    testHelper.createUser(
+                        name = "Bob",
+                        email = "bob@example.com",
+                        role = Role.MEMBER,
+                    )
+
+                val token = testHelper.generateToken(adminUser)
+
+                // When
+                val actual =
+                    client.getForEntity(
+                        "/users",
+                        typeRef<PageResponse<UserResponse>>(),
+                        token = token,
+                    )
+
+                // Then
+                actual.statusCode shouldBe HttpStatus.OK
+                actual.body!!.page.totalElements shouldBeGreaterThanOrEqual 3
+
+                val userIds = actual.body!!.content.map { it.id }
+                userIds shouldContainAll listOf(adminUser.id, alice.id, bob.id)
+            }
+
+            test("ADMIN 권한으로 이름으로 사용자를 검색할 수 있다.") {
+                // Given
+                val adminUser = testHelper.createUser(role = Role.ADMIN)
+                val charlieB =
+                    testHelper.createUser(
+                        name = "Charlie Brown",
+                        email = "charlie@example.com",
+                        role = Role.MEMBER,
+                    )
+                val david =
+                    testHelper.createUser(
+                        name = "David Smith",
+                        email = "david@example.com",
+                        role = Role.MEMBER,
+                    )
+                val charlieW =
+                    testHelper.createUser(
+                        name = "Charlie Wilson",
+                        email = "wilson@example.com",
+                        role = Role.MEMBER,
+                    )
+
+                val token = testHelper.generateToken(adminUser)
+
+                // When
+                val actual =
+                    client.getForEntity(
+                        "/users?name=Charlie",
+                        typeRef<PageResponse<UserResponse>>(),
+                        token = token,
+                    )
+
+                // Then
+                actual.statusCode shouldBe HttpStatus.OK
+
+                val names = actual.body!!.content.map { it.name }
+                names shouldContainAll listOf("Charlie Brown", "Charlie Wilson")
+
+                val userIds = actual.body!!.content.map { it.id }
+                userIds shouldContainExactlyInAnyOrder listOf(charlieB.id, charlieW.id)
+                userIds shouldNotContain david.id
+            }
+
+            test("ADMIN 권한으로 이메일로 사용자를 검색할 수 있다.") {
+                // Given
+                val adminUser = testHelper.createUser(role = Role.ADMIN)
+                val eve =
+                    testHelper.createUser(
+                        name = "Eve",
+                        email = "eve@gmail.com",
+                        role = Role.MEMBER,
+                    )
+                val frank =
+                    testHelper.createUser(
+                        name = "Frank",
+                        email = "frank@yahoo.com",
+                        role = Role.MEMBER,
+                    )
+                val grace =
+                    testHelper.createUser(
+                        name = "Grace",
+                        email = "grace@gmail.com",
+                        role = Role.MEMBER,
+                    )
+
+                val token = testHelper.generateToken(adminUser)
+
+                // When
+                val actual =
+                    client.getForEntity(
+                        "/users?email=gmail",
+                        typeRef<PageResponse<UserResponse>>(),
+                        token = token,
+                    )
+
+                // Then
+                actual.statusCode shouldBe HttpStatus.OK
+
+                val emails = actual.body!!.content.map { it.email }
+                emails shouldContainAll listOf("eve@gmail.com", "grace@gmail.com")
+
+                val userIds = actual.body!!.content.map { it.id }
+                userIds shouldContainAll listOf(eve.id, grace.id)
+                userIds shouldNotContain frank.id
+                userIds.contains(frank.id) shouldBe false
+            }
+
+            test("ADMIN 권한으로 이름과 이메일로 동시에 사용자를 검색할 수 있다.") {
+                // Given
+                val adminUser = testHelper.createUser(role = Role.ADMIN)
+                val henryKim =
+                    testHelper.createUser(
+                        name = "Henry Kim",
+                        email = "henry@gmail.com",
+                        role = Role.MEMBER,
+                    )
+
+                testHelper.createUser(
+                    name = "Henry Lee",
+                    email = "henry@yahoo.com",
+                    role = Role.MEMBER,
+                )
+                testHelper.createUser(
+                    name = "Irene Park",
+                    email = "irene@gmail.com",
+                    role = Role.MEMBER,
+                )
+
+                val token = testHelper.generateToken(adminUser)
+
+                // When
+                val actual =
+                    client.getForEntity(
+                        "/users?name=Henry&email=gmail",
+                        typeRef<PageResponse<UserResponse>>(),
+                        token = token,
+                    )
+
+                // Then
+                actual.statusCode shouldBe HttpStatus.OK
+                actual.body!!.content.size shouldBe 1
+
+                assertSoftly(actual.body!!.content[0]) {
+                    it.id shouldBe henryKim.id
+                    it.name shouldBe "Henry Kim"
+                    it.email shouldBe "henry@gmail.com"
+                }
+            }
+
+            test("MEMBER 권한으로 사용자 목록을 조회하면 오류를 발생한다.") {
+                // Given
+                val memberUser = testHelper.createUser(role = Role.MEMBER)
+
+                val token = testHelper.generateToken(memberUser)
+
+                // When
+                val actual =
+                    client.getForEntity(
+                        "/users",
+                        ErrorResponse::class,
+                        token = token,
+                    )
+
+                // Then
+                actual.statusCode shouldBe HttpStatus.FORBIDDEN
+
+                assertSoftly(actual.body!!) {
+                    it.status shouldBe HttpStatus.FORBIDDEN.value()
+                    it.error shouldBe "Forbidden"
+                    it.message shouldBe "Access Denied"
+                    it.path shouldBe "/api/users"
+                }
+            }
+        }
+
         context("getById") {
             test("ADMIN 권한으로 본인의 정보를 조회할 수 있다.") {
                 // Given

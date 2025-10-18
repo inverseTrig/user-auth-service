@@ -9,6 +9,8 @@ import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import org.springframework.data.domain.PageImpl
+import org.springframework.data.domain.PageRequest
 import org.springframework.security.crypto.password.PasswordEncoder
 import java.util.Optional
 
@@ -310,6 +312,40 @@ class UserServiceTest : UnitTestBase() {
                 result shouldBe user
                 result.name shouldBe "updatedName"
                 result.email shouldBe "same@email.com"
+            }
+        }
+
+        context("getUsersByPage") {
+            test("필터와 페이지 정보로 사용자 목록을 조회한다.") {
+                // Given
+                val user1 =
+                    User(
+                        name = "Alice",
+                        email = "alice@example.com",
+                        password = generateString(),
+                        role = Role.MEMBER,
+                    )
+                val user2 =
+                    User(
+                        name = "Bob",
+                        email = "bob@example.com",
+                        password = generateString(),
+                        role = Role.MEMBER,
+                    )
+
+                val filter = UserFilter(email = "example.com")
+                val pageable = PageRequest.of(0, 10)
+                val expectedPage = PageImpl(listOf(user1, user2), pageable, 2)
+
+                every { userRepository.findAll(filter, pageable) } returns expectedPage
+
+                // When
+                val result = userService.getUsersByPage(filter, pageable)
+
+                // Then
+                result shouldBe expectedPage
+
+                verify { userRepository.findAll(filter, pageable) }
             }
         }
     }

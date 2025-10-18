@@ -5,6 +5,7 @@ import com.example.userauthservice.domain.user.CreateUserData
 import com.example.userauthservice.domain.user.Role
 import com.example.userauthservice.domain.user.UpdateUserServiceData
 import com.example.userauthservice.domain.user.User
+import com.example.userauthservice.domain.user.UserFilter
 import com.example.userauthservice.domain.user.UserService
 import com.example.userauthservice.generateEmail
 import com.example.userauthservice.generateString
@@ -12,6 +13,8 @@ import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import org.springframework.data.domain.PageImpl
+import org.springframework.data.domain.PageRequest
 
 class UserFacadeTest : UnitTestBase() {
     private val userService: UserService = mockk()
@@ -117,6 +120,40 @@ class UserFacadeTest : UnitTestBase() {
                         }
                     userService.update(matcher)
                 }
+            }
+        }
+
+        context("getUsersByPage") {
+            test("필터와 페이지 정보로 사용자 목록을 조회한다") {
+                // Given
+                val user1 =
+                    User(
+                        name = "Alice",
+                        email = "alice@example.com",
+                        password = generateString(),
+                        role = Role.MEMBER,
+                    )
+                val user2 =
+                    User(
+                        name = "Bob",
+                        email = "bob@example.com",
+                        password = generateString(),
+                        role = Role.MEMBER,
+                    )
+
+                val filter = UserFilter(email = "example")
+                val pageable = PageRequest.of(0, 10)
+                val expectedPage = PageImpl(listOf(user1, user2), pageable, 2)
+
+                every { userService.getUsersByPage(filter, pageable) } returns expectedPage
+
+                // When
+                val actual = userFacade.getUsersByPage(filter, pageable)
+
+                // Then
+                actual shouldBe expectedPage
+
+                verify { userService.getUsersByPage(filter, pageable) }
             }
         }
     }

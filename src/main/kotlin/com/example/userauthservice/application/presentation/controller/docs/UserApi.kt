@@ -54,3 +54,22 @@ annotation class GetUserById
 @Parameter(name = "id", description = "수정할 사용자의 ID", required = true)
 @SecuredEndpoint
 annotation class PutUser
+
+@Target(AnnotationTarget.FUNCTION)
+@Retention(AnnotationRetention.RUNTIME)
+@Operation(
+    summary = "사용자 목록 조회",
+    description = "모든 사용자 목록을 페이지 단위로 조회합니다. 이름 또는 이메일로 검색할 수 있습니다. ADMIN 권한이 필요합니다.",
+)
+@ApiResponse(
+    responseCode = "200",
+    description = "사용자 목록 조회 성공",
+    content = [Content(schema = Schema(implementation = UserResponse::class))],
+)
+@Parameter(name = "name", description = "사용자 이름으로 검색 (부분 일치)", required = false)
+@Parameter(name = "email", description = "이메일로 검색 (부분 일치)", required = false)
+@Parameter(name = "page", description = "페이지 번호 (0부터 시작)", required = false)
+@Parameter(name = "size", description = "페이지 크기", required = false)
+@Parameter(name = "sort", description = "정렬 기준 (예: name,asc 또는 email,desc)", required = false)
+@SecuredEndpoint
+annotation class GetUsers

@@ -18,3 +18,11 @@ abstract class RepositoryTestBase : FunSpec() {
     @Autowired
     protected lateinit var entityManager: TestEntityManager
 }
+
+fun TestEntityManager.persistAll(vararg entities: Any): List<Any> =
+    entities.map {
+        when (it) {
+            is Iterable<*> -> it.filterNotNull().map { element -> persistAll(element) }
+            else -> persist(it)
+        }
+    }
