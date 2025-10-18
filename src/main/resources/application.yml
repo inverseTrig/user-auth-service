@@ -45,3 +45,9 @@ cors:
     - "*"
   allow-credentials: true
   max-age: 3600
+
+jwt:
+  secret: jwt-secret-key-change-this-in-production
+  access-token-expiration: 900000 # 15 minutes in milliseconds
+  refresh-token-expiration: 604800000 # 7 days in milliseconds
+  issuer: user-auth-service

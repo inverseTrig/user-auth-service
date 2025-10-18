@@ -1,6 +1,5 @@
-package com.example.userauthservice.domain
+package com.example.userauthservice
 
-import com.example.userauthservice.UnitTestBase
 import io.kotest.datatest.withData
 import io.kotest.matchers.shouldBe
 

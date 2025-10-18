@@ -2,9 +2,9 @@
 
 package com.example.userauthservice.domain.user
 
+import com.example.userauthservice.ErrorMessage
 import com.example.userauthservice.domain.BaseEntity
-import com.example.userauthservice.domain.ErrorMessage
-import com.example.userauthservice.domain.isValidEmail
+import com.example.userauthservice.isValidEmail
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType

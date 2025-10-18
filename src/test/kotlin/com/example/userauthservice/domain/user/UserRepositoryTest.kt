@@ -1,8 +1,10 @@
 package com.example.userauthservice.domain.user
 
 import com.example.userauthservice.RepositoryTestBase
+import com.example.userauthservice.generateString
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.shouldBe
 import org.springframework.beans.factory.annotation.Autowired
 
 class UserRepositoryTest : RepositoryTestBase() {
@@ -41,6 +43,40 @@ class UserRepositoryTest : RepositoryTestBase() {
 
                 // Then
                 actual.shouldBeFalse()
+            }
+        }
+
+        context("findByEmail") {
+            test("주어진 이메일로 사용자가 존재하면 사용자를 반환한다") {
+                // Given
+                val email = "test@example.com"
+
+                val user =
+                    User(
+                        name = generateString(),
+                        email = email,
+                        password = generateString(),
+                        role = Role.MEMBER,
+                    )
+
+                entityManager.persist(user)
+
+                // When
+                val actual = userRepository.findByEmail(email)
+
+                // Then
+                actual shouldBe user
+            }
+
+            test("주어진 이메일로 사용자가 존재하지 않으면 null을 반환한다") {
+                // Given
+                val email = "nonexistent@example.com"
+
+                // When
+                val actual = userRepository.findByEmail(email)
+
+                // Then
+                actual shouldBe null
             }
         }
     }

@@ -1,6 +1,7 @@
 package com.example.userauthservice.domain.user
 
-import com.example.userauthservice.domain.ErrorMessage
+import com.example.userauthservice.ErrorMessage
+import com.example.userauthservice.InvalidCredentialsException
 import jakarta.transaction.Transactional
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
@@ -20,6 +21,21 @@ class UserService(
         val user = data.toEntity(encryptedPassword)
 
         return userRepository.save(user)
+    }
+
+    fun authenticate(
+        email: String,
+        password: String,
+    ): User {
+        val user =
+            userRepository.findByEmail(email)
+                ?: throw InvalidCredentialsException(ErrorMessage.INVALID.INVALID_CREDENTIALS.message)
+
+        if (!passwordEncoder.matches(password, user.password)) {
+            throw InvalidCredentialsException(ErrorMessage.INVALID.INVALID_CREDENTIALS.message)
+        }
+
+        return user
     }
 }
 

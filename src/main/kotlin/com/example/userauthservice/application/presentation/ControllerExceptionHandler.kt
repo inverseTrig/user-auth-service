@@ -1,5 +1,6 @@
 package com.example.userauthservice.application.presentation
 
+import com.example.userauthservice.InvalidCredentialsException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.MethodArgumentNotValidException
@@ -10,18 +11,36 @@ import java.time.LocalDateTime
 
 @ControllerAdvice
 class ControllerExceptionHandler {
+    @ExceptionHandler(InvalidCredentialsException::class)
+    fun handleInvalidCredentials(
+        ex: Exception,
+        request: WebRequest,
+    ): ResponseEntity<ErrorResponse> {
+        return ResponseEntity
+            .status(HttpStatus.UNAUTHORIZED)
+            .body(
+                ErrorResponse(
+                    timestamp = LocalDateTime.now(),
+                    status = HttpStatus.UNAUTHORIZED.value(),
+                    error = HttpStatus.UNAUTHORIZED.reasonPhrase,
+                    message = ex.message ?: "Invalid credentials",
+                    path = request.getDescription(false).removePrefix("uri="),
+                ),
+            )
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException::class)
     fun handleMethodArgumentNotValidException(
         ex: MethodArgumentNotValidException,
         request: WebRequest,
     ): ResponseEntity<ErrorResponse> {
-        val errorMessage = ex.bindingResult.fieldErrors.firstOrNull()?.defaultMessage ?: "Validation failed"
+        val errorMessage = ex.bindingResult.fieldErrors.firstOrNull()?.defaultMessage
         val errorResponse =
             ErrorResponse(
                 timestamp = LocalDateTime.now(),
                 status = HttpStatus.BAD_REQUEST.value(),
                 error = HttpStatus.BAD_REQUEST.reasonPhrase,
-                message = errorMessage,
+                message = errorMessage ?: "Validation failed",
                 path = request.getDescription(false).removePrefix("uri="),
             )
         return ResponseEntity(errorResponse, HttpStatus.BAD_REQUEST)

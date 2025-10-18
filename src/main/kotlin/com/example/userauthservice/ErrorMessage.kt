@@ -1,4 +1,4 @@
-package com.example.userauthservice.domain
+package com.example.userauthservice
 
 object ErrorMessage {
     interface Error {
@@ -10,5 +10,7 @@ object ErrorMessage {
     ) : Error {
         EMAIL_ALREADY_EXISTS("Email already exists"),
         INVALID_EMAIL_FORMAT("Invalid email format"),
+        INVALID_CREDENTIALS("Invalid email or password"),
+        INVALID_TOKEN("Invalid or expired token"),
     }
 }

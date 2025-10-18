@@ -1,7 +1,7 @@
 package com.example.userauthservice.domain.user
 
+import com.example.userauthservice.ErrorMessage
 import com.example.userauthservice.UnitTestBase
-import com.example.userauthservice.domain.ErrorMessage
 import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe

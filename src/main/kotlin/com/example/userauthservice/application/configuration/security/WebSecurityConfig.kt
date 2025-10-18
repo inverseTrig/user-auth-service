@@ -27,6 +27,7 @@ class WebSecurityConfig(
             .authorizeHttpRequests {
                 it
                     .requestMatchers("/signup").permitAll()
+                    .requestMatchers("/signin").permitAll()
                     .anyRequest().authenticated()
             }
 

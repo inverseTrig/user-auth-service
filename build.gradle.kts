@@ -32,6 +32,8 @@ val mockkVersion = "1.14.6"
 val testContainersPostgresVersion = "1.21.3"
 val fixtureVersion = "1.2.0"
 val javaFakerVersion = "1.0.2"
+val jwtVersion = "0.13.0"
+val kotlinLoggingVersion = "7.0.13"
 
 dependencies {
     // Spring
@@ -56,6 +58,14 @@ dependencies {
     implementation("com.github.yitter:yitter-idgenerator:1.0.6")
 
     runtimeOnly("org.postgresql:postgresql")
+
+    // JWT
+    implementation("io.jsonwebtoken:jjwt-api:$jwtVersion")
+    runtimeOnly("io.jsonwebtoken:jjwt-impl:$jwtVersion")
+    runtimeOnly("io.jsonwebtoken:jjwt-jackson:$jwtVersion")
+
+    // Logging
+    implementation("io.github.oshai:kotlin-logging:$kotlinLoggingVersion")
 
     // Spring
     testImplementation("org.springframework.boot:spring-boot-starter-test") {
