@@ -34,6 +34,7 @@ val fixtureVersion = "1.2.0"
 val javaFakerVersion = "1.0.2"
 val jwtVersion = "0.13.0"
 val kotlinLoggingVersion = "7.0.13"
+val springdocVersion = "2.8.6"
 
 dependencies {
     // Spring
@@ -66,6 +67,9 @@ dependencies {
 
     // Logging
     implementation("io.github.oshai:kotlin-logging:$kotlinLoggingVersion")
+
+    // SpringDoc OpenAPI (Swagger)
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:$springdocVersion")
 
     // Spring
     testImplementation("org.springframework.boot:spring-boot-starter-test") {

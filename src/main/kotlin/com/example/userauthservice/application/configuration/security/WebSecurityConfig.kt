@@ -28,6 +28,7 @@ class WebSecurityConfig(
                 it
                     .requestMatchers("/signup").permitAll()
                     .requestMatchers("/signin").permitAll()
+                    .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                     .anyRequest().authenticated()
             }
 
