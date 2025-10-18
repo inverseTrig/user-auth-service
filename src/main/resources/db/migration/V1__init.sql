@@ -7,10 +7,11 @@ CREATE TABLE users
     role       VARCHAR(100) NOT NULL,
     created_at TIMESTAMP    NOT NULL,
     updated_at TIMESTAMP    NOT NULL,
-    deleted_at TIMESTAMP    NULL,
-
-    CONSTRAINT users_email_key UNIQUE (email)
+    deleted_at TIMESTAMP    NULL
 );
+
+CREATE INDEX idx_users_active ON users (id) WHERE deleted_at IS NULL;
+CREATE UNIQUE INDEX idx_users_email_active ON users (email) WHERE deleted_at IS NULL;
 
 COMMENT ON TABLE users IS '사용자';
 COMMENT ON COLUMN users.id IS 'ID';
@@ -21,8 +22,6 @@ COMMENT ON COLUMN users.role IS '권한';
 COMMENT ON COLUMN users.created_at IS '생성일시';
 COMMENT ON COLUMN users.updated_at IS '수정일시';
 COMMENT ON COLUMN users.deleted_at IS '삭제일시';
-
-CREATE INDEX idx_users_email ON users (email);
 
 CREATE TABLE refresh_tokens
 (
@@ -35,7 +34,6 @@ CREATE TABLE refresh_tokens
     created_at TIMESTAMP    NOT NULL,
     updated_at TIMESTAMP    NOT NULL,
 
-    CONSTRAINT refresh_tokens_user_id_fkey FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
     CONSTRAINT refresh_tokens_token_key UNIQUE (token)
 );
 

@@ -4,7 +4,9 @@ import com.example.userauthservice.ErrorMessage
 import com.example.userauthservice.InvalidCredentialsException
 import com.example.userauthservice.UnitTestBase
 import com.example.userauthservice.generateString
+import com.example.userauthservice.shouldSameTime
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.extensions.time.withConstantNow
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
@@ -12,6 +14,7 @@ import io.mockk.verify
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.PageRequest
 import org.springframework.security.crypto.password.PasswordEncoder
+import java.time.LocalDateTime
 import java.util.Optional
 
 class UserServiceTest : UnitTestBase() {
@@ -346,6 +349,31 @@ class UserServiceTest : UnitTestBase() {
                 result shouldBe expectedPage
 
                 verify { userRepository.findAll(filter, pageable) }
+            }
+        }
+
+        context("deleteById") {
+            test("ID로 사용자를 삭제한다.") {
+                // Given
+                val now = LocalDateTime.now()
+
+                val user =
+                    User(
+                        name = "UserToDelete",
+                        email = "delete@example.com",
+                        password = generateString(),
+                        role = Role.MEMBER,
+                    )
+
+                every { userRepository.findById(user.id) } returns Optional.of(user)
+
+                // When
+                withConstantNow(now) {
+                    userService.deleteById(user.id)
+                }
+
+                // Then
+                user.deletedAt shouldSameTime now
             }
         }
     }

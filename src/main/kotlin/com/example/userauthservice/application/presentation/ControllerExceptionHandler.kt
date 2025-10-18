@@ -79,6 +79,22 @@ class ControllerExceptionHandler {
         return ResponseEntity(errorResponse, HttpStatus.BAD_REQUEST)
     }
 
+    @ExceptionHandler(NoSuchElementException::class)
+    fun handleNoSuchElementException(
+        ex: NoSuchElementException,
+        request: WebRequest,
+    ): ResponseEntity<ErrorResponse> {
+        val errorResponse =
+            ErrorResponse(
+                timestamp = LocalDateTime.now(),
+                status = HttpStatus.NOT_FOUND.value(),
+                error = HttpStatus.NOT_FOUND.reasonPhrase,
+                message = ex.message ?: "Not found",
+                path = request.getDescription(false).removePrefix("uri="),
+            )
+        return ResponseEntity(errorResponse, HttpStatus.NOT_FOUND)
+    }
+
     @ExceptionHandler(Exception::class)
     fun handleGlobalException(
         ex: Exception,

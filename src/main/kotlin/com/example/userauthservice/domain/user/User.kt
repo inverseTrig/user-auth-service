@@ -10,9 +10,12 @@ import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
 import jakarta.persistence.Table
+import org.hibernate.annotations.SQLRestriction
+import java.time.LocalDateTime
 
 @Entity
 @Table(name = "users")
+@SQLRestriction("deleted_at IS NULL")
 class User(
     name: String,
     email: String,
@@ -38,6 +41,10 @@ class User(
     @Enumerated(EnumType.STRING)
     val role: Role = role
 
+    @Column
+    var deletedAt: LocalDateTime? = null
+        private set
+
     init {
         this.email = email
     }
@@ -45,6 +52,10 @@ class User(
     fun update(data: UpdateUserData) {
         data.email?.let { this.email = it }
         data.name?.let { this.name = it }
+    }
+
+    fun softDelete() {
+        this.deletedAt = LocalDateTime.now()
     }
 }
 

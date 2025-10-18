@@ -54,4 +54,13 @@ abstract class FunctionalTestBase : FunSpec() {
         val headers = token?.let { HttpHeaders().apply { setBearerAuth(it) } }
         return this.exchange(url, HttpMethod.GET, HttpEntity(null, headers), responseType)
     }
+
+    protected fun <T : Any> TestRestTemplate.deleteForEntity(
+        url: String,
+        responseType: KClass<T>,
+        token: String? = null,
+    ): ResponseEntity<T> {
+        val headers = token?.let { HttpHeaders().apply { setBearerAuth(it) } }
+        return this.exchange(url, HttpMethod.DELETE, HttpEntity(null, headers), responseType.java)
+    }
 }

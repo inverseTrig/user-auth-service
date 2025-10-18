@@ -8,6 +8,7 @@ import com.example.userauthservice.application.presentation.dto.UserResponse
 import com.example.userauthservice.domain.user.Role
 import com.example.userauthservice.typeRef
 import io.kotest.assertions.assertSoftly
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.collections.shouldNotContain
@@ -643,6 +644,143 @@ class UserControllerTest : FunctionalTestBase() {
                     it.error shouldBe "Bad Request"
                     it.message shouldBe "Email already exists"
                     it.path shouldBe "/api/users/${user1.id}"
+                }
+            }
+        }
+
+        context("deleteUser") {
+            test("ADMIN 권한으로 본인을 삭제할 수 있다.") {
+                // Given
+                val adminUser =
+                    testHelper.createUser(
+                        name = "AdminToDelete",
+                        email = "admin-delete-self@example.com",
+                        role = Role.ADMIN,
+                    )
+
+                val token = testHelper.generateToken(adminUser)
+
+                // When
+                val actual =
+                    client.deleteForEntity(
+                        "/users/${adminUser.id}",
+                        Void::class,
+                        token = token,
+                    )
+
+                // Then
+                actual.statusCode shouldBe HttpStatus.NO_CONTENT
+
+                shouldThrow<NoSuchElementException> {
+                    testHelper.getUser(adminUser.id)
+                }
+            }
+
+            test("ADMIN 권한으로 다른 사용자를 삭제할 수 있다.") {
+                // Given
+                val adminUser = testHelper.createUser(role = Role.ADMIN)
+
+                val memberUser =
+                    testHelper.createUser(
+                        name = "MemberToDelete",
+                        email = "member-to-delete@example.com",
+                        role = Role.MEMBER,
+                    )
+
+                val token = testHelper.generateToken(adminUser)
+
+                // When
+                val actual =
+                    client.deleteForEntity(
+                        "/users/${memberUser.id}",
+                        Void::class,
+                        token = token,
+                    )
+
+                // Then
+                actual.statusCode shouldBe HttpStatus.NO_CONTENT
+
+                shouldThrow<NoSuchElementException> {
+                    testHelper.getUser(memberUser.id)
+                }
+            }
+
+            test("MEMBER 권한으로 본인을 삭제할 수 있다.") {
+                // Given
+                val memberUser =
+                    testHelper.createUser(
+                        name = "MemberDeleteSelf",
+                        email = "member-delete-self@example.com",
+                        role = Role.MEMBER,
+                    )
+
+                val token = testHelper.generateToken(memberUser)
+
+                // When
+                val actual =
+                    client.deleteForEntity(
+                        "/users/${memberUser.id}",
+                        Void::class,
+                        token = token,
+                    )
+
+                // Then
+                actual.statusCode shouldBe HttpStatus.NO_CONTENT
+
+                shouldThrow<NoSuchElementException> {
+                    testHelper.getUser(memberUser.id)
+                }
+            }
+
+            test("MEMBER 권한으로 다른 사용자를 삭제하면 오류를 발생한다.") {
+                // Given
+                val memberUser = testHelper.createUser(role = Role.MEMBER)
+                val otherMember = testHelper.createUser(role = Role.MEMBER)
+
+                val token = testHelper.generateToken(memberUser)
+
+                // When
+                val actual =
+                    client.deleteForEntity(
+                        "/users/${otherMember.id}",
+                        ErrorResponse::class,
+                        token = token,
+                    )
+
+                // Then
+                actual.statusCode shouldBe HttpStatus.FORBIDDEN
+
+                assertSoftly(actual.body!!) {
+                    it.status shouldBe HttpStatus.FORBIDDEN.value()
+                    it.error shouldBe "Forbidden"
+                    it.message shouldBe "Access Denied"
+                    it.path shouldBe "/api/users/${otherMember.id}"
+                }
+            }
+
+            test("존재하지 않는 사용자를 삭제하면 오류를 발생한다.") {
+                // Given
+                val adminUser = testHelper.createUser(role = Role.ADMIN)
+                val nonexistentUserId = 999999L
+
+                val token = testHelper.generateToken(adminUser)
+
+                // When
+                val actual =
+                    client.deleteForEntity(
+                        "/users/$nonexistentUserId",
+                        ErrorResponse::class,
+                        token = token,
+                    )
+
+                // Then
+                actual.statusCode shouldBe HttpStatus.NOT_FOUND
+
+                assertSoftly(actual.body!!) {
+                    it.status shouldBe HttpStatus.NOT_FOUND.value()
+                    it.error shouldBe "Not Found"
+                    it.message shouldBe "User not found"
+                    it.path shouldBe "/api/users/$nonexistentUserId"
                 }
             }
         }
