@@ -3,6 +3,7 @@ package com.example.userauthservice.application.presentation
 import com.example.userauthservice.InvalidCredentialsException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.AccessDeniedException
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ControllerAdvice
 import org.springframework.web.bind.annotation.ExceptionHandler
@@ -27,6 +28,22 @@ class ControllerExceptionHandler {
                     path = request.getDescription(false).removePrefix("uri="),
                 ),
             )
+    }
+
+    @ExceptionHandler(AccessDeniedException::class)
+    fun handleAccessDeniedException(
+        ex: AccessDeniedException,
+        request: WebRequest,
+    ): ResponseEntity<ErrorResponse> {
+        val errorResponse =
+            ErrorResponse(
+                timestamp = LocalDateTime.now(),
+                status = HttpStatus.FORBIDDEN.value(),
+                error = HttpStatus.FORBIDDEN.reasonPhrase,
+                message = ex.message ?: "Access denied",
+                path = request.getDescription(false).removePrefix("uri="),
+            )
+        return ResponseEntity(errorResponse, HttpStatus.FORBIDDEN)
     }
 
     @ExceptionHandler(MethodArgumentNotValidException::class)

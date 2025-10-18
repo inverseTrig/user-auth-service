@@ -2,10 +2,10 @@ package com.example.userauthservice.application.presentation.controller.auth
 
 import com.example.userauthservice.FunctionalTestBase
 import com.example.userauthservice.application.presentation.ErrorResponse
-import com.example.userauthservice.application.presentation.dto.auth.SignInRequest
-import com.example.userauthservice.application.presentation.dto.auth.SignInResponse
-import com.example.userauthservice.application.presentation.dto.auth.SignUpRequest
-import com.example.userauthservice.application.presentation.dto.auth.SignUpResponse
+import com.example.userauthservice.application.presentation.dto.SignInRequest
+import com.example.userauthservice.application.presentation.dto.SignInResponse
+import com.example.userauthservice.application.presentation.dto.SignUpRequest
+import com.example.userauthservice.application.presentation.dto.SignUpResponse
 import com.example.userauthservice.domain.user.Role
 import com.example.userauthservice.shouldSameTime
 import io.kotest.assertions.assertSoftly

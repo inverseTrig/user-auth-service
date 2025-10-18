@@ -13,4 +13,11 @@ object ErrorMessage {
         INVALID_CREDENTIALS("Invalid email or password"),
         INVALID_TOKEN("Invalid or expired token"),
     }
+
+    @Suppress("ClassName")
+    enum class NOT_FOUND(
+        override val message: String,
+    ) : Error {
+        USER("User not found"),
+    }
 }

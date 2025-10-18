@@ -9,6 +9,7 @@ import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.context.annotation.Import
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.http.HttpEntity
+import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpMethod.PUT
 import org.springframework.http.ResponseEntity
@@ -30,15 +31,27 @@ abstract class FunctionalTestBase : FunSpec() {
         url: String,
         body: Any,
         responseType: KClass<T>,
-    ): ResponseEntity<T> = this.exchange(url, PUT, HttpEntity(body), responseType.java)
+        token: String? = null,
+    ): ResponseEntity<T> {
+        val headers = token?.let { HttpHeaders().apply { setBearerAuth(it) } }
+        return this.exchange(url, PUT, HttpEntity(body, headers), responseType.java)
+    }
 
     protected fun <T : Any> TestRestTemplate.getForEntity(
         url: String,
         responseType: KClass<T>,
-    ): ResponseEntity<T> = this.exchange(url, HttpMethod.GET, null, responseType.java)
+        token: String? = null,
+    ): ResponseEntity<T> {
+        val headers = token?.let { HttpHeaders().apply { setBearerAuth(it) } }
+        return this.exchange(url, HttpMethod.GET, HttpEntity(null, headers), responseType.java)
+    }
 
     protected fun <T : Any> TestRestTemplate.getForEntity(
         url: String,
         responseType: ParameterizedTypeReference<T>,
-    ): ResponseEntity<T> = this.exchange(url, HttpMethod.GET, null, responseType)
+        token: String? = null,
+    ): ResponseEntity<T> {
+        val headers = token?.let { HttpHeaders().apply { setBearerAuth(it) } }
+        return this.exchange(url, HttpMethod.GET, HttpEntity(null, headers), responseType)
+    }
 }

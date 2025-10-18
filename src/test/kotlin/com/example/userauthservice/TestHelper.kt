@@ -31,16 +31,19 @@ class TestHelper(
     }
 
     fun createUser(
-        email: String,
+        name: String = generateString(),
+        email: String = generateEmail(),
         password: String = generateString(),
+        role: com.example.userauthservice.domain.user.Role = com.example.userauthservice.domain.user.Role.MEMBER,
     ): User {
         val facade = UserFacade::class.getBean()
 
         val data =
             CreateUserData(
-                name = generateString(),
+                name = name,
                 email = email,
                 password = password,
+                role = role,
             )
 
         return facade.createUser(data)
@@ -58,6 +61,11 @@ class TestHelper(
     fun getRefreshToken(refreshToken: String): RefreshToken {
         val repository = RefreshTokenRepository::class.getBean()
         return repository.findAll().first { it.token == refreshToken }
+    }
+
+    fun generateToken(user: User): String {
+        val jwtTokenProcessor = JwtTokenProcessor::class.getBean()
+        return jwtTokenProcessor.generateAccessToken(user)
     }
 
     private fun <T : Any> KClass<T>.getBean(): T = context.getBean(this.java)

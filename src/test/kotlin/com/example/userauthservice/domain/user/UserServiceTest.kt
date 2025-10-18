@@ -9,6 +9,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import org.springframework.security.crypto.password.PasswordEncoder
+import java.util.Optional
 
 class UserServiceTest : UnitTestBase() {
     private val userRepository: UserRepository = mockk()
@@ -138,6 +139,41 @@ class UserServiceTest : UnitTestBase() {
                         userService.authenticate(email, password)
                     }
                 exception.message shouldBe ErrorMessage.INVALID.INVALID_CREDENTIALS.message
+            }
+        }
+
+        context("getById") {
+            test("ID로 사용자를 조회한다.") {
+                // Given
+                val user =
+                    User(
+                        name = "testName",
+                        email = "test@email.com",
+                        password = "encryptedPassword",
+                        role = Role.MEMBER,
+                    )
+
+                every { userRepository.findById(user.id) } returns Optional.of(user)
+
+                // When
+                val result = userService.getById(user.id)
+
+                // Then
+                result shouldBe user
+            }
+
+            test("존재하지 않는 ID로 조회 시 오류를 던진다.") {
+                // Given
+                val userId = 999L
+
+                every { userRepository.findById(userId) } returns Optional.empty()
+
+                // Expect
+                val exception =
+                    shouldThrow<NoSuchElementException> {
+                        userService.getById(userId)
+                    }
+                exception.message shouldBe ErrorMessage.NOT_FOUND.USER.message
             }
         }
     }

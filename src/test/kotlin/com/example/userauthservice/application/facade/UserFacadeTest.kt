@@ -59,5 +59,26 @@ class UserFacadeTest : UnitTestBase() {
                 }
             }
         }
+
+        context("getUserById") {
+            test("ID로 사용자를 조회한다") {
+                // Given
+                val user =
+                    User(
+                        name = generateString(),
+                        email = generateEmail(),
+                        password = generateString(),
+                        role = Role.MEMBER,
+                    )
+
+                every { userService.getById(user.id) } returns user
+
+                // When
+                val actual = userFacade.getUserById(user.id)
+
+                // Then
+                actual shouldBe user
+            }
+        }
     }
 }

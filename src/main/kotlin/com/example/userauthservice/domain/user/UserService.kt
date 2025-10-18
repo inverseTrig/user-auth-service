@@ -37,6 +37,13 @@ class UserService(
 
         return user
     }
+
+    fun getById(id: Long): User {
+        return userRepository.findById(id)
+            .orElseThrow {
+                NoSuchElementException(ErrorMessage.NOT_FOUND.USER.message)
+            }
+    }
 }
 
 data class CreateUserData(

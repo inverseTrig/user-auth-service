@@ -17,12 +17,12 @@ import java.time.ZoneId
 import java.util.Date
 import javax.crypto.SecretKey
 
-private val logger = KotlinLogging.logger {}
-
 @Component
 class JwtTokenProcessor(
     private val jwtProperties: JwtProperties,
 ) {
+    private val logger = KotlinLogging.logger {}
+
     private val secretKey: SecretKey = Keys.hmacShaKeyFor(jwtProperties.secret.toByteArray())
 
     val accessTokenExpiration: Long = jwtProperties.accessTokenExpiration

@@ -1,4 +1,4 @@
-package com.example.userauthservice.application.presentation.dto.auth
+package com.example.userauthservice.application.presentation.dto
 
 import com.example.userauthservice.application.facade.AuthenticateResult
 import com.example.userauthservice.domain.user.CreateUserData

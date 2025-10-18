@@ -12,4 +12,8 @@ class UserFacade(
     fun createUser(data: CreateUserData): User {
         return userService.create(data)
     }
+
+    fun getUserById(id: Long): User {
+        return userService.getById(id)
+    }
 }
