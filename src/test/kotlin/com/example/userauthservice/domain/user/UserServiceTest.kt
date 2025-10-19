@@ -3,6 +3,7 @@ package com.example.userauthservice.domain.user
 import com.example.userauthservice.ErrorMessage
 import com.example.userauthservice.InvalidCredentialsException
 import com.example.userauthservice.UnitTestBase
+import com.example.userauthservice.domain.user.event.UserDeletedEvent
 import com.example.userauthservice.generateString
 import com.example.userauthservice.shouldSameTime
 import io.kotest.assertions.throwables.shouldThrow
@@ -11,6 +12,7 @@ import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.PageRequest
 import org.springframework.security.crypto.password.PasswordEncoder
@@ -20,11 +22,13 @@ import java.util.Optional
 class UserServiceTest : UnitTestBase() {
     private val userRepository: UserRepository = mockk()
     private val passwordEncoder: PasswordEncoder = mockk()
+    private val eventPublisher: ApplicationEventPublisher = mockk()
 
     private val userService: UserService =
         UserService(
             userRepository = userRepository,
             passwordEncoder = passwordEncoder,
+            eventPublisher = eventPublisher,
         )
 
     init {
@@ -353,7 +357,7 @@ class UserServiceTest : UnitTestBase() {
         }
 
         context("deleteById") {
-            test("ID로 사용자를 삭제한다.") {
+            test("ID로 사용자를 삭제하고 사용자 삭제 이벤트를 발행한다.") {
                 // Given
                 val now = LocalDateTime.now()
 
@@ -374,6 +378,16 @@ class UserServiceTest : UnitTestBase() {
 
                 // Then
                 user.deletedAt shouldSameTime now
+
+                verify {
+                    val matcher =
+                        withArg<UserDeletedEvent> {
+                            it.userId shouldBe user.id
+                            it.email shouldBe "delete@example.com"
+                            it.name shouldBe "UserToDelete"
+                        }
+                    eventPublisher.publishEvent(matcher)
+                }
             }
         }
     }

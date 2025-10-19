@@ -2,7 +2,9 @@ package com.example.userauthservice.domain.user
 
 import com.example.userauthservice.ErrorMessage
 import com.example.userauthservice.InvalidCredentialsException
+import com.example.userauthservice.domain.user.event.UserDeletedEvent
 import jakarta.transaction.Transactional
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.security.crypto.password.PasswordEncoder
@@ -12,6 +14,7 @@ import org.springframework.stereotype.Service
 class UserService(
     private val userRepository: UserRepository,
     private val passwordEncoder: PasswordEncoder,
+    private val eventPublisher: ApplicationEventPublisher,
 ) {
     @Transactional
     fun create(data: CreateUserData): User {
@@ -73,6 +76,14 @@ class UserService(
     fun deleteById(id: Long) {
         val user = getById(id)
         user.softDelete()
+
+        val event =
+            UserDeletedEvent(
+                userId = user.id,
+                email = user.email,
+                name = user.name,
+            )
+        eventPublisher.publishEvent(event)
     }
 }
 

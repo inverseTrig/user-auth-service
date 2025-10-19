@@ -15,7 +15,7 @@ import org.springframework.http.HttpMethod.PUT
 import org.springframework.http.ResponseEntity
 import kotlin.reflect.KClass
 
-@Import(TestConfiguration::class, TestDatabaseConfiguration::class)
+@Import(TestConfiguration::class, TestDatabaseConfiguration::class, TestRabbitMQConfiguration::class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 abstract class FunctionalTestBase : FunSpec() {
     override val extensions: List<Extension>
