@@ -1,6 +1,6 @@
 package com.example.userauthservice.application.presentation.dto
 
-import com.example.userauthservice.application.facade.AuthenticateResult
+import com.example.userauthservice.application.facade.AuthenticationResult
 import com.example.userauthservice.domain.user.CreateUserData
 import com.example.userauthservice.domain.user.User
 import jakarta.validation.constraints.Email
@@ -52,7 +52,7 @@ data class SignInRequest(
     val password: String,
 )
 
-data class SignInResponse(
+data class UserTokenResponse(
     val accessToken: String,
     val refreshToken: String,
     val tokenType: String = "Bearer",
@@ -67,17 +67,22 @@ data class SignInResponse(
     )
 
     constructor(
-        authenticateResult: AuthenticateResult,
+        result: AuthenticationResult,
     ) : this(
-        accessToken = authenticateResult.accessToken,
-        refreshToken = authenticateResult.refreshToken,
-        expiresIn = authenticateResult.expiresIn,
+        accessToken = result.accessToken,
+        refreshToken = result.refreshToken,
+        expiresIn = result.expiresIn,
         user =
             UserInfo(
-                id = authenticateResult.user.id,
-                email = authenticateResult.user.email,
-                name = authenticateResult.user.name,
-                role = authenticateResult.user.role.name,
+                id = result.user.id,
+                email = result.user.email,
+                name = result.user.name,
+                role = result.user.role.name,
             ),
     )
 }
+
+data class RefreshTokenRequest(
+    @field:NotBlank(message = "Refresh token is required")
+    val refreshToken: String,
+)

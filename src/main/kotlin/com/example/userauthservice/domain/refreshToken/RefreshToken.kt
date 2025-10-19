@@ -16,7 +16,6 @@ class RefreshToken(
     token: String,
     familyId: Long = generateId(),
     expiresAt: LocalDateTime,
-    isRevoked: Boolean = false,
 ) : BaseEntity() {
     @Column(nullable = false)
     val userId: Long = userId
@@ -28,8 +27,13 @@ class RefreshToken(
     val familyId: Long = familyId
 
     @Column(nullable = false)
-    val isRevoked: Boolean = isRevoked
+    var isRevoked: Boolean = false
+        private set
 
     @Column(nullable = false)
     val expiresAt: LocalDateTime = expiresAt
+
+    fun revoke() {
+        this.isRevoked = true
+    }
 }

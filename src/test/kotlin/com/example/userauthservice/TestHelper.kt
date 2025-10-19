@@ -2,10 +2,13 @@ package com.example.userauthservice
 
 import com.example.userauthservice.application.configuration.security.JwtTokenProcessor
 import com.example.userauthservice.application.configuration.security.TokenPrincipal
+import com.example.userauthservice.application.facade.AuthFacade
+import com.example.userauthservice.application.facade.AuthenticationResult
 import com.example.userauthservice.application.facade.UserFacade
 import com.example.userauthservice.domain.refreshToken.RefreshToken
 import com.example.userauthservice.domain.refreshToken.RefreshTokenRepository
 import com.example.userauthservice.domain.user.CreateUserData
+import com.example.userauthservice.domain.user.Role
 import com.example.userauthservice.domain.user.User
 import org.springframework.boot.test.context.TestComponent
 import org.springframework.context.ApplicationContext
@@ -29,11 +32,24 @@ class TestHelper(
         return passwordEncoder.matches(expected, password)
     }
 
+    fun signIn(
+        email: String,
+        password: String,
+    ): AuthenticationResult {
+        val facade = AuthFacade::class.getBean()
+        return facade.authenticate(email, password)
+    }
+
+    fun rotateRefreshToken(token: String): AuthenticationResult {
+        val service = AuthFacade::class.getBean()
+        return service.refreshToken(token)
+    }
+
     fun createUser(
         name: String = generateString(),
         email: String = generateEmail(),
         password: String = generateString(),
-        role: com.example.userauthservice.domain.user.Role = com.example.userauthservice.domain.user.Role.MEMBER,
+        role: Role = Role.MEMBER,
     ): User {
         val facade = UserFacade::class.getBean()
 

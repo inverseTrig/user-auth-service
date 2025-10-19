@@ -1,8 +1,8 @@
 package com.example.userauthservice.application.presentation.controller.docs
 
 import com.example.userauthservice.application.presentation.ErrorResponse
-import com.example.userauthservice.application.presentation.dto.SignInResponse
 import com.example.userauthservice.application.presentation.dto.SignUpResponse
+import com.example.userauthservice.application.presentation.dto.UserTokenResponse
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.media.Content
 import io.swagger.v3.oas.annotations.media.Schema
@@ -39,7 +39,7 @@ annotation class PostSignIn
         ApiResponse(
             responseCode = "200",
             description = "사용자 인증 성공",
-            content = [Content(schema = Schema(implementation = SignInResponse::class))],
+            content = [Content(schema = Schema(implementation = UserTokenResponse::class))],
         ),
         ApiResponse(
             responseCode = "401",
@@ -49,3 +49,25 @@ annotation class PostSignIn
     ],
 )
 annotation class PostSignUp
+
+@Target(AnnotationTarget.FUNCTION)
+@Retention(AnnotationRetention.RUNTIME)
+@Operation(
+    summary = "토큰 갱신",
+    description = "Refresh 토큰으로 새로운 Access 토큰과 Refresh 토큰 발급. 토큰 재사용 감지 시 토큰 패밀리 전체 무효화.",
+)
+@ApiResponses(
+    value = [
+        ApiResponse(
+            responseCode = "200",
+            description = "토큰 갱신 성공",
+            content = [Content(schema = Schema(implementation = UserTokenResponse::class))],
+        ),
+        ApiResponse(
+            responseCode = "401",
+            description = "유효하지 않거나 재사용된 토큰",
+            content = [Content(schema = Schema(implementation = ErrorResponse::class))],
+        ),
+    ],
+)
+annotation class PostRefreshToken

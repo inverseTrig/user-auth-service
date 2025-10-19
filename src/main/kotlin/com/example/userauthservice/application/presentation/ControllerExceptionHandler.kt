@@ -1,6 +1,7 @@
 package com.example.userauthservice.application.presentation
 
 import com.example.userauthservice.InvalidCredentialsException
+import com.example.userauthservice.InvalidTokenException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.AccessDeniedException
@@ -25,6 +26,24 @@ class ControllerExceptionHandler {
                     status = HttpStatus.UNAUTHORIZED.value(),
                     error = HttpStatus.UNAUTHORIZED.reasonPhrase,
                     message = ex.message ?: "Invalid credentials",
+                    path = request.getDescription(false).removePrefix("uri="),
+                ),
+            )
+    }
+
+    @ExceptionHandler(InvalidTokenException::class)
+    fun handleInvalidTokenException(
+        ex: Exception,
+        request: WebRequest,
+    ): ResponseEntity<ErrorResponse> {
+        return ResponseEntity
+            .status(HttpStatus.UNAUTHORIZED)
+            .body(
+                ErrorResponse(
+                    timestamp = LocalDateTime.now(),
+                    status = HttpStatus.UNAUTHORIZED.value(),
+                    error = HttpStatus.UNAUTHORIZED.reasonPhrase,
+                    message = ex.message ?: "Invalid token",
                     path = request.getDescription(false).removePrefix("uri="),
                 ),
             )

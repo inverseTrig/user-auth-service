@@ -2,12 +2,14 @@ package com.example.userauthservice.application.presentation.controller.auth
 
 import com.example.userauthservice.application.facade.AuthFacade
 import com.example.userauthservice.application.facade.UserFacade
+import com.example.userauthservice.application.presentation.controller.docs.PostRefreshToken
 import com.example.userauthservice.application.presentation.controller.docs.PostSignIn
 import com.example.userauthservice.application.presentation.controller.docs.PostSignUp
+import com.example.userauthservice.application.presentation.dto.RefreshTokenRequest
 import com.example.userauthservice.application.presentation.dto.SignInRequest
-import com.example.userauthservice.application.presentation.dto.SignInResponse
 import com.example.userauthservice.application.presentation.dto.SignUpRequest
 import com.example.userauthservice.application.presentation.dto.SignUpResponse
+import com.example.userauthservice.application.presentation.dto.UserTokenResponse
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
 import org.springframework.http.ResponseEntity
@@ -34,12 +36,21 @@ class AuthController(
     @PostMapping("/signin")
     fun signIn(
         @Valid @RequestBody request: SignInRequest,
-    ): ResponseEntity<SignInResponse> {
+    ): ResponseEntity<UserTokenResponse> {
         val info =
             authFacade.authenticate(
                 email = request.email,
                 password = request.password,
             )
-        return ResponseEntity.ok(SignInResponse(info))
+        return ResponseEntity.ok(UserTokenResponse(info))
+    }
+
+    @PostRefreshToken
+    @PostMapping("/refresh-token")
+    fun refreshToken(
+        @Valid @RequestBody request: RefreshTokenRequest,
+    ): ResponseEntity<UserTokenResponse> {
+        val result = authFacade.refreshToken(request.refreshToken)
+        return ResponseEntity.ok(UserTokenResponse(result))
     }
 }

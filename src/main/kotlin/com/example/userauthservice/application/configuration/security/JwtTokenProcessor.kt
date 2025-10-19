@@ -1,6 +1,7 @@
 package com.example.userauthservice.application.configuration.security
 
 import com.example.userauthservice.ErrorMessage
+import com.example.userauthservice.domain.generateId
 import com.example.userauthservice.domain.user.Role
 import com.example.userauthservice.domain.user.User
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -52,17 +53,23 @@ class JwtTokenProcessor(
         expiration: Long,
         tokenType: String,
     ): String {
-        val now = Date()
-        val expiryDate = Date(now.time + expiration)
+        val zone = ZoneId.systemDefault()
+
+        val now = LocalDateTime.now()
+        val expiryDateTime = now.plusSeconds(expiration / 1000)
+
+        val nowDate = Date.from(now.atZone(zone).toInstant())
+        val expiryDate = Date.from(expiryDateTime.atZone(zone).toInstant())
 
         return Jwts
             .builder()
             .subject(userId.toString())
+            .id(generateId().toString())
             .claim("email", email)
             .claim("role", role.name)
             .claim("type", tokenType)
             .issuer(jwtProperties.issuer)
-            .issuedAt(now)
+            .issuedAt(nowDate)
             .expiration(expiryDate)
             .signWith(secretKey)
             .compact()

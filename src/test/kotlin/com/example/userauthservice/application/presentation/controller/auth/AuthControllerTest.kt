@@ -2,10 +2,11 @@ package com.example.userauthservice.application.presentation.controller.auth
 
 import com.example.userauthservice.FunctionalTestBase
 import com.example.userauthservice.application.presentation.ErrorResponse
+import com.example.userauthservice.application.presentation.dto.RefreshTokenRequest
 import com.example.userauthservice.application.presentation.dto.SignInRequest
-import com.example.userauthservice.application.presentation.dto.SignInResponse
 import com.example.userauthservice.application.presentation.dto.SignUpRequest
 import com.example.userauthservice.application.presentation.dto.SignUpResponse
+import com.example.userauthservice.application.presentation.dto.UserTokenResponse
 import com.example.userauthservice.domain.user.Role
 import com.example.userauthservice.shouldSameTime
 import io.kotest.assertions.assertSoftly
@@ -14,6 +15,7 @@ import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import org.springframework.http.HttpStatus
 import java.time.LocalDateTime
 
@@ -150,7 +152,7 @@ class AuthControllerTest : FunctionalTestBase() {
                     client.postForEntity(
                         "/signin",
                         request,
-                        SignInResponse::class.java,
+                        UserTokenResponse::class.java,
                     )
 
                 // Then
@@ -269,6 +271,168 @@ class AuthControllerTest : FunctionalTestBase() {
                     it.error shouldBe "Bad Request"
                     it.message shouldBe "Invalid email format"
                     it.path shouldBe "/api/signin"
+                }
+            }
+        }
+
+        context("refreshToken") {
+            test("유효한 리프레시 토큰으로 새로운 토큰을 발급받는다.") {
+                // Given
+                val email = "refresh-test@foobar.com"
+                val password = "securePassword123"
+
+                val user = testHelper.createUser(email = email, password = password)
+
+                val authenticationResult = testHelper.signIn(email, password)
+
+                val oldRefreshToken = authenticationResult.refreshToken
+                val oldAccessToken = authenticationResult.accessToken
+
+                val oldRefreshTokenEntity = testHelper.getRefreshToken(oldRefreshToken)
+
+                val request = RefreshTokenRequest(refreshToken = oldRefreshToken)
+
+                // When
+                val actual =
+                    client.postForEntity(
+                        "/refresh-token",
+                        request,
+                        UserTokenResponse::class.java,
+                    )
+
+                // Then
+                actual.statusCode shouldBe HttpStatus.OK
+
+                assertSoftly(actual.body!!) {
+                    it.accessToken.shouldNotBeNull()
+                    it.refreshToken.shouldNotBeNull()
+                    it.tokenType shouldBe "Bearer"
+                    it.expiresIn shouldBe 900000L
+                    it.user.id shouldBe user.id
+                    it.user.email shouldBe email
+                    it.user.role shouldBe "MEMBER"
+
+                    it.accessToken shouldNotBe oldAccessToken
+                    it.refreshToken shouldNotBe oldRefreshToken
+
+                    testHelper.validateToken(it.accessToken) { principal ->
+                        principal.userId shouldBe user.id
+                        principal.email shouldBe email
+                        principal.role shouldBe "MEMBER"
+                        principal.tokenType shouldBe "ACCESS"
+                    }
+
+                    testHelper.validateToken(it.refreshToken) { principal ->
+                        principal.userId shouldBe user.id
+                        principal.email shouldBe email
+                        principal.role shouldBe "MEMBER"
+                        principal.tokenType shouldBe "REFRESH"
+                    }
+                }
+
+                val revokedToken = testHelper.getRefreshToken(oldRefreshToken)
+                revokedToken.isRevoked.shouldBeTrue()
+
+                val newRefreshTokenEntity = testHelper.getRefreshToken(actual.body!!.refreshToken)
+                assertSoftly(newRefreshTokenEntity) {
+                    it.userId shouldBe user.id
+                    it.familyId shouldBe oldRefreshTokenEntity.familyId
+                    it.isRevoked.shouldBeFalse()
+                }
+            }
+
+            test("만료된 리프레시 토큰으로 갱신 시 오류를 반환한다.") {
+                // Given
+                val now = LocalDateTime.now()
+
+                val email = "refresh-expired-test@foobar.com"
+                val password = "securePassword123"
+
+                testHelper.createUser(email = email, password = password)
+                val authenticationResult = testHelper.signIn(email, password)
+
+                val expiredRefreshToken = authenticationResult.refreshToken
+                val request = RefreshTokenRequest(refreshToken = expiredRefreshToken)
+
+                // When
+                val actual =
+                    withConstantNow(now.plusDays(8)) {
+                        client.postForEntity(
+                            "/refresh-token",
+                            request,
+                            ErrorResponse::class.java,
+                        )
+                    }
+
+                // Then
+                actual.statusCode shouldBe HttpStatus.UNAUTHORIZED
+
+                assertSoftly(actual.body!!) {
+                    it.status shouldBe HttpStatus.UNAUTHORIZED.value()
+                    it.error shouldBe "Unauthorized"
+                    it.message shouldBe "Invalid or expired token"
+                    it.path shouldBe "/api/refresh-token"
+                }
+            }
+
+            test("이미 사용된 리프레시 토큰으로 갱신 시 토큰 패밀리 전체를 무효화한다.") {
+                // Given
+                val email = "refresh-reuse-test@foobar.com"
+                val password = "securePassword123"
+
+                testHelper.createUser(email = email, password = password)
+                val authenticationResult = testHelper.signIn(email, password)
+
+                val token1 = authenticationResult.refreshToken
+                val token2 = testHelper.rotateRefreshToken(token1).refreshToken
+
+                val request = RefreshTokenRequest(refreshToken = token1)
+
+                // When
+                val actual =
+                    client.postForEntity(
+                        "/refresh-token",
+                        request,
+                        ErrorResponse::class.java,
+                    )
+
+                // Then
+                actual.statusCode shouldBe HttpStatus.UNAUTHORIZED
+
+                assertSoftly(actual.body!!) {
+                    it.status shouldBe HttpStatus.UNAUTHORIZED.value()
+                    it.error shouldBe "Unauthorized"
+                    it.message shouldBe "Invalid or expired token"
+                    it.path shouldBe "/api/refresh-token"
+                }
+
+                val token1AfterReuse = testHelper.getRefreshToken(token1)
+                val token2AfterReuse = testHelper.getRefreshToken(token2)
+
+                token1AfterReuse.isRevoked.shouldBeTrue()
+                token2AfterReuse.isRevoked.shouldBeTrue()
+            }
+
+            test("유효하지 않은 리프레시 토큰으로 갱신 시 오류를 반환한다.") {
+                // Given
+                val request = RefreshTokenRequest(refreshToken = "invalid.refresh.token")
+
+                // When
+                val actual =
+                    client.postForEntity(
+                        "/refresh-token",
+                        request,
+                        ErrorResponse::class.java,
+                    )
+
+                // Then
+                actual.statusCode shouldBe HttpStatus.UNAUTHORIZED
+
+                assertSoftly(actual.body!!) {
+                    it.status shouldBe HttpStatus.UNAUTHORIZED.value()
+                    it.error shouldBe "Unauthorized"
+                    it.message shouldBe "Invalid or expired token"
+                    it.path shouldBe "/api/refresh-token"
                 }
             }
         }
